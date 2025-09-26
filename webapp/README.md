@@ -86,6 +86,7 @@ El nuevo panel de **portapapeles** habilita atajos nativos (Ctrl/Cmd+C, X, V) y 
 - **Importación `.cp`** &mdash; Se aceptan archivos de texto plano con la convención histórica de ORIPA (tipo numérico + coordenadas). El documento se normaliza en el store y conserva un registro de historial.
 - **Exportación `.opx`** &mdash; El documento activo se serializa nuevamente al formato esperado por ORIPA y el panel de archivo descarga automáticamente el resultado.
 - **Exportación `.cp`** &mdash; El panel lateral permite generar versiones `.cp` filtrando las aristas auxiliares, como hace el exportador original.
+- **Exportación `.fold`** &mdash; El patrón se transforma al estándar JSON del proyecto FOLD con vértices deduplicados, asignaciones de pliegue y metadatos listos para simuladores.
 
 ## Next steps
 

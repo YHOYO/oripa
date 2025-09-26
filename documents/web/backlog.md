@@ -82,6 +82,8 @@
 | UI-4 | Integrar guardado automático en IndexedDB. | Media | 3 | PER-1 |
 
 > **Actualización 2024-05-18**: El store gestiona múltiples documentos con pestañas, renombrado y cierre, habilitando el flujo de trabajo multi-proyecto (UI-3).
+>
+> **Actualización 2024-05-19**: El exportador `.fold` convierte el patrón activo a JSON FOLD con vértices deduplicados y metadatos y se añadió el botón correspondiente en la UI de persistencia.
 
 ## Automatizaciones
 | ID | Historia | P | E | Dep |

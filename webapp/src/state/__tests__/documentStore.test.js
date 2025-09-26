@@ -554,3 +554,18 @@ test("exportToCp omits auxiliary edges", () => {
   assert(lines.length > 0);
   assert(lines.every((line) => line.type !== "auxiliary"));
 });
+
+test("exportToFold produces a valid FOLD document", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const exported = store.exportToFold();
+  const parsed = JSON.parse(exported);
+
+  assert.equal(parsed.file_spec, 1.1);
+  assert.equal(parsed.file_creator, "ORIPA Web Prototype");
+  assert(parsed.vertices_coords.length >= 4);
+  assert.equal(parsed.edges_vertices.length, parsed.edges_assignment.length);
+  assert(parsed.edges_assignment.every((assignment) => typeof assignment === "string"));
+  assert(parsed.edges_vertices.every((pair) => pair.length === 2));
+});

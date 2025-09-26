@@ -3,6 +3,7 @@ import { createVector2 } from "../core/geometry/vector2.js";
 import { createLineSegment, toJSON as segmentToJSON } from "../core/geometry/lineSegment.js";
 import { parseOpx, serializeOpx } from "../io/opx.js";
 import { parseCp, serializeCp } from "../io/cp.js";
+import { serializeFold } from "../io/fold.js";
 
 const VALID_EDGE_TYPES = new Set(["mountain", "valley", "border", "auxiliary"]);
 
@@ -409,6 +410,22 @@ export function createDocumentStore() {
 
     return serializeCp({
       lines: currentDocument.edges ?? [],
+    });
+  }
+
+  function exportToFold() {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before exporting");
+    }
+
+    return serializeFold({
+      lines: currentDocument.edges ?? [],
+      metadata: {
+        name: currentDocument.name,
+        author: currentDocument.metadata?.author,
+        unit: currentDocument.metadata?.unit,
+        updatedAt: currentDocument.updatedAt,
+      },
     });
   }
 
@@ -1103,6 +1120,7 @@ export function createDocumentStore() {
     exportToOpx,
     importFromCp,
     exportToCp,
+    exportToFold,
     applyMutation,
     addEdge,
     setSelectedEdges,

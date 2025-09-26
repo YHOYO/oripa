@@ -27,10 +27,11 @@ export function createPersistenceControls({ documentStore }) {
     typeof documentStore.importFromOpx !== "function" ||
     typeof documentStore.exportToOpx !== "function" ||
     typeof documentStore.importFromCp !== "function" ||
-    typeof documentStore.exportToCp !== "function"
+    typeof documentStore.exportToCp !== "function" ||
+    typeof documentStore.exportToFold !== "function"
   ) {
     throw new Error(
-      "documentStore debe exponer importFromOpx, importFromCp, exportToOpx y exportToCp",
+      "documentStore debe exponer importFromOpx, importFromCp, exportToOpx, exportToCp y exportToFold",
     );
   }
 
@@ -90,8 +91,8 @@ export function createPersistenceControls({ documentStore }) {
     }
 
     try {
-      const contents = format === "cp" ? documentStore.exportToCp() : documentStore.exportToOpx();
-      const mimeType = format === "cp" ? "text/plain" : "application/xml";
+      const contents = selectExporter(format)();
+      const mimeType = getMimeType(format);
       const blob = new BlobCtor([contents], { type: mimeType });
       const url = URLCtor.createObjectURL(blob);
 
@@ -108,6 +109,35 @@ export function createPersistenceControls({ documentStore }) {
     } catch {
       setStatus(`Error al exportar el patrón actual (.${format}).`, "error");
     }
+  }
+
+  function selectExporter(format) {
+    if (format === "cp") {
+      return () => documentStore.exportToCp();
+    }
+    if (format === "fold") {
+      return () => documentStore.exportToFold();
+    }
+    return () => documentStore.exportToOpx();
+  }
+
+  function getMimeType(format) {
+    if (format === "cp") {
+      return "text/plain";
+    }
+    if (format === "fold") {
+      return "application/json";
+    }
+    return "application/xml";
+  }
+
+  function createExportButton(label, format) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "persistence-export";
+    button.textContent = label;
+    button.addEventListener("click", () => handleExportClick(format));
+    return button;
   }
 
   function mount(container) {
@@ -131,19 +161,11 @@ export function createPersistenceControls({ documentStore }) {
     const actions = document.createElement("div");
     actions.className = "persistence-actions";
 
-    const exportOpxButton = document.createElement("button");
-    exportOpxButton.type = "button";
-    exportOpxButton.className = "persistence-export";
-    exportOpxButton.textContent = "Exportar .opx";
-    exportOpxButton.addEventListener("click", () => handleExportClick("opx"));
+    const exportOpxButton = createExportButton("Exportar .opx", "opx");
+    const exportCpButton = createExportButton("Exportar .cp", "cp");
+    const exportFoldButton = createExportButton("Exportar .fold", "fold");
 
-    const exportCpButton = document.createElement("button");
-    exportCpButton.type = "button";
-    exportCpButton.className = "persistence-export";
-    exportCpButton.textContent = "Exportar .cp";
-    exportCpButton.addEventListener("click", () => handleExportClick("cp"));
-
-    actions.append(exportOpxButton, exportCpButton);
+    actions.append(exportOpxButton, exportCpButton, exportFoldButton);
 
     statusElement = document.createElement("p");
     statusElement.className = "persistence-status";
@@ -151,7 +173,7 @@ export function createPersistenceControls({ documentStore }) {
     statusElement.setAttribute("role", "status");
     statusElement.setAttribute("aria-live", "polite");
     statusElement.textContent =
-      "Selecciona un archivo .opx/.cp para importar o exporta el patrón actual.";
+      "Selecciona un archivo .opx/.cp para importar o exporta el patrón actual (.opx/.cp/.fold).";
 
     wrapper.append(importLabel, actions, statusElement);
 
