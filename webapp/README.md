@@ -1,6 +1,6 @@
-# ORIPA Web Prototype – Phase 2
+# ORIPA Web Prototype – Phase 3 Kickoff
 
-This directory contains the base project scaffolding for the HTML5/JavaScript reimplementation of ORIPA. The goal for **Phase 2** is to establish a maintainable structure that future sessions can extend with the full feature set documented in [`documents/web/web_reimplementation_spec.md`](../documents/web/web_reimplementation_spec.md).
+This directory contains the base project scaffolding for the HTML5/JavaScript reimplementation of ORIPA. After completing the **Phase 2** objectives (foundations, toolset, persistence and multi-document workflows), Phase 3 begins with the first diagnostics for the folding engine described in [`documents/web/web_reimplementation_spec.md`](../documents/web/web_reimplementation_spec.md).
 
 ## Directory layout
 
@@ -87,9 +87,15 @@ El nuevo panel de **portapapeles** habilita atajos nativos (Ctrl/Cmd+C, X, V) y 
 - **Exportación `.opx`** &mdash; El documento activo se serializa nuevamente al formato esperado por ORIPA y el panel de archivo descarga automáticamente el resultado.
 - **Exportación `.cp`** &mdash; El panel lateral permite generar versiones `.cp` filtrando las aristas auxiliares, como hace el exportador original.
 - **Exportación `.fold`** &mdash; El patrón se transforma al estándar JSON del proyecto FOLD con vértices deduplicados, asignaciones de pliegue y metadatos listos para simuladores.
+- **Exportación PNG/JPG** &mdash; El canvas actual puede descargarse como imagen raster directamente desde la UI, completando el paquete de persistencia visual planificado para la Fase 2.
+
+## Diagnósticos de plegabilidad (inicio Phase 3)
+
+- **Análisis local** &mdash; El `documentStore` expone `getLocalFlatFoldabilityReport`, que calcula sectores angulares por vértice y aplica los teoremas de Kawasaki y Maekawa para preparar el motor de plegado.
+- **Pruebas iniciales** &mdash; El módulo `folding/localFlatFoldability` cuenta con pruebas unitarias que validan los diagnósticos antes de añadir transformaciones y workers.
 
 ## Next steps
 
-Phase 3 and beyond will replace the placeholder data with live editing tools, extend the document model to include vertices, constraints, and undo/redo stacks, and add feature-complete rendering. Refer to the session log for planned milestones.
+Phase 3 se centrará en construir el motor de plegado: validaciones locales en tiempo real, construcción de subcaras y propagación de solapes. Las sesiones siguientes expandirán el módulo de `folding/` con workers dedicados y visualización del estado plegado.
 
 See `documents/web/samples/README.md` for curated `.opx` fixtures and the manual checklist used during Phase 2 validation.

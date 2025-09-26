@@ -1,7 +1,7 @@
 import { createApplication } from "./createApplication.js";
 import { createPhaseIndicator } from "./phaseIndicator.js";
 
-const PHASE_NAME = "Phase 2 · Proyecto base";
+const PHASE_NAME = "Phase 3 · Motor de plegado";
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = createApplication({

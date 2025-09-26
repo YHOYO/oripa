@@ -4,6 +4,7 @@ import { createLineSegment, toJSON as segmentToJSON } from "../core/geometry/lin
 import { parseOpx, serializeOpx } from "../io/opx.js";
 import { parseCp, serializeCp } from "../io/cp.js";
 import { serializeFold } from "../io/fold.js";
+import { analyzeLocalFlatFoldability } from "../folding/localFlatFoldability.js";
 
 const VALID_EDGE_TYPES = new Set(["mountain", "valley", "border", "auxiliary"]);
 
@@ -426,6 +427,17 @@ export function createDocumentStore() {
         unit: currentDocument.metadata?.unit,
         updatedAt: currentDocument.updatedAt,
       },
+    });
+  }
+
+  function getLocalFlatFoldabilityReport() {
+    if (!currentDocument) {
+      return [];
+    }
+
+    return analyzeLocalFlatFoldability({
+      vertices: currentDocument.vertices ?? [],
+      edges: currentDocument.edges ?? [],
     });
   }
 
@@ -1121,6 +1133,7 @@ export function createDocumentStore() {
     importFromCp,
     exportToCp,
     exportToFold,
+    getLocalFlatFoldabilityReport,
     applyMutation,
     addEdge,
     setSelectedEdges,

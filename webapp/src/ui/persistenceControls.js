@@ -21,7 +21,7 @@ function getFormatFromFileName(name) {
   return "opx";
 }
 
-export function createPersistenceControls({ documentStore }) {
+export function createPersistenceControls({ documentStore, canvas }) {
   if (
     !documentStore ||
     typeof documentStore.importFromOpx !== "function" ||
@@ -36,6 +36,12 @@ export function createPersistenceControls({ documentStore }) {
   }
 
   let statusElement = null;
+  const canvasElement = canvas ?? null;
+
+  function createTimestampedFileName(extension) {
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    return `oripa-pattern-${timestamp}.${extension}`;
+  }
 
   function setStatus(message, state = "idle") {
     if (!statusElement) return;
@@ -81,7 +87,27 @@ export function createPersistenceControls({ documentStore }) {
     }, 1000);
   }
 
-  function handleExportClick(format) {
+  function downloadBlob(blob, format) {
+    const BlobCtor = globalThis?.Blob;
+    const URLCtor = globalThis?.URL;
+
+    if (!BlobCtor || !URLCtor) {
+      throw new Error("Blob o URL no disponibles en este navegador");
+    }
+
+    const url = URLCtor.createObjectURL(blob);
+
+    const anchor = document.createElement("a");
+    anchor.style.display = "none";
+    anchor.href = url;
+    anchor.download = createTimestampedFileName(format);
+    statusElement?.parentElement?.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    revokeUrlLater(url);
+  }
+
+  function handleFileExportClick(format) {
     const BlobCtor = globalThis?.Blob;
     const URLCtor = globalThis?.URL;
 
@@ -94,20 +120,90 @@ export function createPersistenceControls({ documentStore }) {
       const contents = selectExporter(format)();
       const mimeType = getMimeType(format);
       const blob = new BlobCtor([contents], { type: mimeType });
-      const url = URLCtor.createObjectURL(blob);
-
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      const anchor = document.createElement("a");
-      anchor.style.display = "none";
-      anchor.href = url;
-      anchor.download = `oripa-pattern-${timestamp}.${format}`;
-      statusElement?.parentElement?.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      revokeUrlLater(url);
+      downloadBlob(blob, format);
       setStatus(`Patrón exportado como .${format}.`, "success");
     } catch {
       setStatus(`Error al exportar el patrón actual (.${format}).`, "error");
+    }
+  }
+
+  function canvasToBlob(targetCanvas, mimeType) {
+    return new Promise((resolve, reject) => {
+      if (!targetCanvas) {
+        reject(new Error("Canvas no disponible para exportación"));
+        return;
+      }
+
+      if (typeof targetCanvas.toBlob === "function") {
+        targetCanvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("El canvas devolvió un blob vacío"));
+          }
+        }, mimeType);
+        return;
+      }
+
+      if (typeof targetCanvas.toDataURL === "function") {
+        try {
+          const dataUrl = targetCanvas.toDataURL(mimeType);
+          const fetchFn = globalThis?.fetch;
+          if (typeof fetchFn === "function") {
+            fetchFn(dataUrl)
+              .then((response) => response.blob())
+              .then(resolve)
+              .catch(() => reject(new Error("No fue posible convertir el data URL a blob")));
+            return;
+          }
+
+          const base64 = dataUrl.split(",")[1];
+          if (!base64) {
+            reject(new Error("El data URL generado es inválido"));
+            return;
+          }
+
+          const atobFn = globalThis?.atob;
+          if (typeof atobFn !== "function") {
+            reject(new Error("El entorno no permite decodificar el data URL"));
+            return;
+          }
+
+          const binary = atobFn(base64);
+          const length = binary.length;
+          const bytes = new Uint8Array(length);
+          for (let index = 0; index < length; index += 1) {
+            bytes[index] = binary.charCodeAt(index);
+          }
+          const BlobCtor = globalThis?.Blob;
+          if (!BlobCtor) {
+            reject(new Error("El entorno no soporta blobs"));
+            return;
+          }
+          resolve(new BlobCtor([bytes], { type: mimeType }));
+        } catch (error) {
+          reject(error);
+        }
+        return;
+      }
+
+      reject(new Error("El canvas no soporta exportación a blob"));
+    });
+  }
+
+  async function handleImageExportClick(format) {
+    try {
+      const mimeType = getMimeType(format);
+      if (!mimeType) {
+        setStatus(`Formato de imagen .${format} no soportado.`, "error");
+        return;
+      }
+
+      const blob = await canvasToBlob(canvasElement, mimeType);
+      downloadBlob(blob, format);
+      setStatus(`Imagen exportada como .${format}.`, "success");
+    } catch (error) {
+      setStatus(error?.message ?? `Error al exportar la imagen del patrón (.${format}).`, "error");
     }
   }
 
@@ -128,15 +224,21 @@ export function createPersistenceControls({ documentStore }) {
     if (format === "fold") {
       return "application/json";
     }
+    if (format === "png") {
+      return "image/png";
+    }
+    if (format === "jpg" || format === "jpeg") {
+      return "image/jpeg";
+    }
     return "application/xml";
   }
 
-  function createExportButton(label, format) {
+  function createExportButton(label, format, handler = handleFileExportClick) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "persistence-export";
     button.textContent = label;
-    button.addEventListener("click", () => handleExportClick(format));
+    button.addEventListener("click", () => handler(format));
     return button;
   }
 
@@ -164,8 +266,16 @@ export function createPersistenceControls({ documentStore }) {
     const exportOpxButton = createExportButton("Exportar .opx", "opx");
     const exportCpButton = createExportButton("Exportar .cp", "cp");
     const exportFoldButton = createExportButton("Exportar .fold", "fold");
+    const exportPngButton = createExportButton("Exportar PNG", "png", handleImageExportClick);
+    const exportJpgButton = createExportButton("Exportar JPG", "jpg", handleImageExportClick);
 
-    actions.append(exportOpxButton, exportCpButton, exportFoldButton);
+    actions.append(
+      exportOpxButton,
+      exportCpButton,
+      exportFoldButton,
+      exportPngButton,
+      exportJpgButton,
+    );
 
     statusElement = document.createElement("p");
     statusElement.className = "persistence-status";
@@ -173,7 +283,7 @@ export function createPersistenceControls({ documentStore }) {
     statusElement.setAttribute("role", "status");
     statusElement.setAttribute("aria-live", "polite");
     statusElement.textContent =
-      "Selecciona un archivo .opx/.cp para importar o exporta el patrón actual (.opx/.cp/.fold).";
+      "Importa archivos .opx/.cp o exporta el patrón actual (.opx/.cp/.fold/PNG/JPG).";
 
     wrapper.append(importLabel, actions, statusElement);
 

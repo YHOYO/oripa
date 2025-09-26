@@ -29,7 +29,7 @@ export function createApplication({
   const canvasPresenter = createCanvasPresenter({ canvas, documentStore });
   const toolController = createToolController({ canvas, documentStore });
   const selectionInspector = createSelectionInspector({ documentStore });
-  const persistenceControls = createPersistenceControls({ documentStore });
+  const persistenceControls = createPersistenceControls({ documentStore, canvas });
   const clipboardControls = createClipboardControls({ documentStore });
   const documentTabsPresenter = createDocumentTabs({ documentStore });
 

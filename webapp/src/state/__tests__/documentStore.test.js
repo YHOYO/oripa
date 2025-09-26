@@ -148,6 +148,18 @@ test("selection box updates are normalized", () => {
   assert.equal(cleared.selection.box, null);
 });
 
+test("getLocalFlatFoldabilityReport analiza el documento activo", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const report = store.getLocalFlatFoldabilityReport();
+
+  assert.ok(Array.isArray(report));
+  assert.ok(report.length > 0);
+  assert.ok(report.every((entry) => typeof entry.degree === "number"));
+  assert.ok(report.every((entry) => entry.kawasaki));
+});
+
 test("translateEdges moves selected edges without adding history entries", () => {
   const store = createDocumentStore();
   store.bootstrapEmptyDocument();
