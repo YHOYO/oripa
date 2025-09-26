@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createDocumentStore } from "../../state/documentStore.js";
+import { parseOpx } from "../../io/opx.js";
 
 test("addEdge appends a new edge and history entry", () => {
   const store = createDocumentStore();
@@ -288,4 +289,80 @@ test("deleteSelectedEdges removes all selected edges with a single history entry
   });
   assert.deepEqual(after.selection.edges, []);
   assert.equal(after.history.length, historyBefore + 1);
+});
+
+test("importFromOpx replaces the document with parsed edges", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0" class="java.beans.XMLDecoder">
+ <object class="oripa.DataSet">
+  <void property="lines">
+   <array class="oripa.OriLineProxy" length="2">
+    <void index="0">
+     <object class="oripa.OriLineProxy">
+      <void property="type">
+       <int>2</int>
+      </void>
+      <void property="x0">
+       <double>0.0</double>
+      </void>
+      <void property="x1">
+       <double>10.0</double>
+      </void>
+      <void property="y0">
+       <double>0.0</double>
+      </void>
+      <void property="y1">
+       <double>0.0</double>
+      </void>
+     </object>
+    </void>
+    <void index="1">
+     <object class="oripa.OriLineProxy">
+      <void property="type">
+       <int>3</int>
+      </void>
+      <void property="x0">
+       <double>10.0</double>
+      </void>
+      <void property="x1">
+       <double>10.0</double>
+      </void>
+      <void property="y0">
+       <double>0.0</double>
+      </void>
+      <void property="y1">
+       <double>10.0</double>
+      </void>
+     </object>
+    </void>
+   </array>
+  </void>
+ </object>
+</java>`;
+
+  store.importFromOpx(xml);
+
+  const document = store.getDocument();
+  assert.equal(document.edges.length, 2);
+  assert.equal(document.edges[0].type, "mountain");
+  assert.equal(document.history.length, 1);
+  assert.match(document.history[0].label, /importado/);
+  assert.deepEqual(document.selection, { edges: [], box: null });
+  assert.ok(document.metadata.canvasBounds.width >= 1280);
+  assert.ok(document.metadata.canvasBounds.height >= 720);
+});
+
+test("exportToOpx serializes the current document", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const document = store.getDocument();
+  const xml = store.exportToOpx();
+  const parsed = parseOpx(xml);
+
+  assert.equal(parsed.lines.length, document.edges.length);
+  assert(parsed.lines.every((line) => typeof line.type === "string"));
 });

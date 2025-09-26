@@ -1,6 +1,7 @@
 import { createObservable } from "./observable.js";
 import { createVector2 } from "../core/geometry/vector2.js";
 import { createLineSegment, toJSON as segmentToJSON } from "../core/geometry/lineSegment.js";
+import { parseOpx, serializeOpx } from "../io/opx.js";
 
 const VALID_EDGE_TYPES = new Set(["mountain", "valley", "border", "auxiliary"]);
 
@@ -96,14 +97,43 @@ export function createDocumentStore() {
   let historyCounter = 0;
 
   function bootstrapEmptyDocument() {
-    currentDocument = createInitialDocument();
-    edgeCounter = currentDocument.counters?.edges ?? currentDocument.edges.length;
-    historyCounter = currentDocument.counters?.history ?? currentDocument.history.length;
-    observable.emit(currentDocument);
+    setDocument(createInitialDocument());
   }
 
   function getDocument() {
     return currentDocument;
+  }
+
+  function setDocument(document) {
+    currentDocument = document ?? null;
+    updateCountersFromDocument(currentDocument);
+    observable.emit(currentDocument);
+  }
+
+  function updateCountersFromDocument(document) {
+    if (!document) {
+      edgeCounter = 0;
+      historyCounter = 0;
+      return;
+    }
+
+    const counters = document.counters ?? {};
+
+    if (Number.isFinite(counters.edges)) {
+      edgeCounter = counters.edges;
+    } else if (Array.isArray(document.edges)) {
+      edgeCounter = document.edges.length;
+    } else {
+      edgeCounter = 0;
+    }
+
+    if (Number.isFinite(counters.history)) {
+      historyCounter = counters.history;
+    } else if (Array.isArray(document.history)) {
+      historyCounter = document.history.length;
+    } else {
+      historyCounter = 0;
+    }
   }
 
   function applyMutation(mutation) {
@@ -111,22 +141,92 @@ export function createDocumentStore() {
       throw new Error("mutation must be a function");
     }
 
-    currentDocument = mutation(currentDocument);
+    const nextDocument = mutation(currentDocument);
+    setDocument(nextDocument);
+  }
 
-    const counters = currentDocument?.counters ?? {};
+  function importFromOpx(xmlSource) {
+    const parsed = parseOpx(xmlSource);
+    const lines = Array.isArray(parsed?.lines) ? parsed.lines : [];
 
-    if (Number.isFinite(counters.edges)) {
-      edgeCounter = counters.edges;
-    } else if (Array.isArray(currentDocument?.edges)) {
-      edgeCounter = currentDocument.edges.length;
+    const timestamp = new Date().toISOString();
+
+    const edges = lines
+      .map((line, index) => {
+        const startCandidate = line?.start ?? {};
+        const endCandidate = line?.end ?? {};
+        if (!isValidPoint(startCandidate) || !isValidPoint(endCandidate)) {
+          return null;
+        }
+
+        const normalizedType = normalizeEdgeType(line?.type) ?? "auxiliary";
+        const start = roundPoint(startCandidate);
+        const end = roundPoint(endCandidate);
+
+        return {
+          id: `edge-${index + 1}`,
+          type: normalizedType,
+          start,
+          end,
+        };
+      })
+      .filter(Boolean);
+
+    const vertices = extractVertices(edges);
+    const bounds = calculateBounds(edges);
+
+    const document = {
+      id: `import-${timestamp}`,
+      name: parsed?.metadata?.name ?? "Imported crease pattern",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      edges,
+      vertices,
+      selection: { edges: [], box: null },
+      metadata: {
+        unit: parsed?.metadata?.unit ?? "mm",
+        author: parsed?.metadata?.author ?? "",
+        source: "opx",
+        ...(bounds ? { bounds } : {}),
+        canvasBounds: bounds
+          ? {
+              width: Math.max(1280, Math.ceil(bounds.maxX - bounds.minX + 40)),
+              height: Math.max(720, Math.ceil(bounds.maxY - bounds.minY + 40)),
+            }
+          : { width: 1280, height: 720 },
+      },
+      counters: {
+        edges: edges.length,
+        history: 1,
+      },
+      history: [
+        {
+          id: "history-1",
+          label: "Patrón importado (.opx)",
+          timestamp,
+          metadata: {
+            source: "opx",
+            lines: edges.length,
+          },
+        },
+      ],
+    };
+
+    setDocument(document);
+  }
+
+  function exportToOpx() {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before exporting");
     }
 
-    if (Number.isFinite(counters.history)) {
-      historyCounter = counters.history;
-    } else if (Array.isArray(currentDocument?.history)) {
-      historyCounter = currentDocument.history.length;
-    }
-    observable.emit(currentDocument);
+    const lines = (currentDocument.edges ?? []).map((edge) => ({
+      start: edge.start,
+      end: edge.end,
+      type: edge.type,
+    }));
+
+    return serializeOpx({ lines });
   }
 
   function addEdge({ start, end, type = "auxiliary" }) {
@@ -654,6 +754,9 @@ export function createDocumentStore() {
     subscribe: observable.subscribe,
     bootstrapEmptyDocument,
     getDocument,
+    setDocument,
+    importFromOpx,
+    exportToOpx,
     applyMutation,
     addEdge,
     setSelectedEdges,
@@ -679,6 +782,37 @@ function roundPoint(point) {
     x: Number(point.x.toFixed(3)),
     y: Number(point.y.toFixed(3)),
   };
+}
+
+function calculateBounds(edges) {
+  if (!Array.isArray(edges) || edges.length === 0) {
+    return null;
+  }
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  edges.forEach((edge) => {
+    const points = [edge?.start, edge?.end];
+    points.forEach((point) => {
+      if (!isValidPoint(point)) {
+        return;
+      }
+
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    });
+  });
+
+  if (![minX, minY, maxX, maxY].every(Number.isFinite)) {
+    return null;
+  }
+
+  return { minX, minY, maxX, maxY };
 }
 
 function normalizeBox(box) {

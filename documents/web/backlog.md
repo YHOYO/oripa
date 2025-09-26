@@ -48,6 +48,8 @@
 
 > **Actualización 2024-05-12**: El panel de selección permite reasignar tipos de pliegue de forma masiva y deja documentado el tamaño de la selección.
 
+> **Actualización 2024-05-13**: Se incorporó un parser/serializador `.opx` junto con importación en el `documentStore`, cubierto por pruebas unitarias.
+
 ## Persistencia
 | ID | Historia | P | E | Dep |
 | --- | --- | --- | --- | --- |

@@ -13,7 +13,7 @@ webapp/
     ├── app/              # Bootstrap helpers and cross-cutting composition.
     ├── core/
     │   └── geometry/     # Vector, segment, ray primitives and math utilities.
-    ├── io/               # (Reserved) file import/export adapters.
+    ├── io/               # OPX import/export adapters and future persistence layers.
     ├── rendering/        # Canvas/SVG rendering layers.
     ├── state/            # Reactive state containers and models.
     └── ui/               # DOM-level presentation components.
@@ -71,6 +71,11 @@ Las primeras herramientas interactivas ya están enlazadas con el canvas y el hi
 - **Segmento (L)** &mdash; Traza nuevas aristas de pliegue en el patrón activo.
 
 Además de las herramientas, la **inspección de selección** del panel lateral muestra el tamaño de la selección y permite asignar rápidamente los tipos estándar (montaña, valle, borde, auxiliar) a todas las aristas seleccionadas.
+
+## Persistencia inicial
+
+- **Importación `.opx`** &mdash; El estado de la aplicación puede reemplazarse desde archivos XML de ORIPA (subset `OriLineProxy`).
+- **Exportación `.opx`** &mdash; El documento activo se serializa nuevamente al formato esperado por ORIPA para facilitar intercambio temprano.
 
 ## Next steps
 
