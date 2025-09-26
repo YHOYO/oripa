@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas: document.getElementById("cp-canvas"),
     toolList: document.getElementById("tool-list"),
     historyList: document.getElementById("history-list"),
+    selectionPanel: document.getElementById("selection-panel"),
   });
 
   const updatePhaseLabel = createPhaseIndicator({

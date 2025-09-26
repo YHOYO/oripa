@@ -46,6 +46,8 @@
 
 > **Actualización 2024-05-11**: La herramienta de Simetría refleja segmentos respecto a una arista existente y completa el set RND-4.
 
+> **Actualización 2024-05-12**: El panel de selección permite reasignar tipos de pliegue de forma masiva y deja documentado el tamaño de la selección.
+
 ## Persistencia
 | ID | Historia | P | E | Dep |
 | --- | --- | --- | --- | --- |

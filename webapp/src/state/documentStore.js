@@ -2,6 +2,8 @@ import { createObservable } from "./observable.js";
 import { createVector2 } from "../core/geometry/vector2.js";
 import { createLineSegment, toJSON as segmentToJSON } from "../core/geometry/lineSegment.js";
 
+const VALID_EDGE_TYPES = new Set(["mountain", "valley", "border", "auxiliary"]);
+
 function createInitialDocument() {
   const timestamp = new Date().toISOString();
   const edges = createInitialEdges();
@@ -462,6 +464,85 @@ export function createDocumentStore() {
     deleteEdges(selected);
   }
 
+  function setEdgeType(edgeIds, type) {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before updating edge types");
+    }
+
+    const normalizedType = normalizeEdgeType(type);
+    if (!normalizedType) {
+      return;
+    }
+
+    const targetIds = normalizeEdgeIds(edgeIds);
+    if (targetIds.length === 0) {
+      return;
+    }
+
+    const idSet = new Set(targetIds);
+    const timestamp = new Date().toISOString();
+
+    applyMutation((doc) => {
+      if (!doc) {
+        return doc;
+      }
+
+      let changedCount = 0;
+
+      const edges = (doc.edges ?? []).map((edge) => {
+        if (!edge || !idSet.has(edge.id)) {
+          return edge;
+        }
+
+        if (edge.type === normalizedType) {
+          return edge;
+        }
+
+        changedCount += 1;
+        return {
+          ...edge,
+          type: normalizedType,
+        };
+      });
+
+      if (changedCount === 0) {
+        return doc;
+      }
+
+      const history = [
+        ...doc.history,
+        {
+          id: `history-${historyCounter + 1}`,
+          label: `Tipo actualizado (${changedCount} segmento${changedCount === 1 ? "" : "s"})`,
+          timestamp,
+          metadata: {
+            type: normalizedType,
+            edges: targetIds,
+          },
+        },
+      ];
+
+      return {
+        ...doc,
+        edges,
+        history,
+        counters: {
+          ...(doc.counters ?? {}),
+          history: history.length,
+        },
+      };
+    });
+  }
+
+  function setSelectedEdgesType(type) {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before updating selected edge types");
+    }
+
+    const selected = currentDocument.selection?.edges ?? [];
+    setEdgeType(selected, type);
+  }
+
   function recordEdgeTranslation(edgeIds, delta) {
     if (!currentDocument) {
       throw new Error("document must be initialized before logging translations");
@@ -584,6 +665,8 @@ export function createDocumentStore() {
     recordEdgeScaling,
     deleteEdges,
     deleteSelectedEdges,
+    setEdgeType,
+    setSelectedEdgesType,
   };
 }
 
@@ -710,4 +793,17 @@ function normalizeBasePositions(basePositions) {
   });
 
   return result.size > 0 ? result : null;
+}
+
+function normalizeEdgeType(type) {
+  if (typeof type !== "string") {
+    return null;
+  }
+
+  const normalized = type.toLowerCase();
+  if (!VALID_EDGE_TYPES.has(normalized)) {
+    return null;
+  }
+
+  return normalized;
 }

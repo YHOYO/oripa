@@ -48,7 +48,7 @@ The entry point `src/app/bootstrap.js` wires together:
 
 * `createDocumentStore` &mdash; an observable store that emits the crease-pattern document state.
 * `createCanvasPresenter` &mdash; the 2D renderer responsible for drawing grid and edge layers.
-* `createToolRegistry` and `createHistoryTimeline` &mdash; lightweight DOM presenters to populate the sidebar.
+* `createToolRegistry`, `createSelectionInspector` and `createHistoryTimeline` &mdash; lightweight DOM presenters to populate the sidebar.
 
 When the page loads the application:
 
@@ -62,13 +62,15 @@ When the page loads the application:
 
 Las primeras herramientas interactivas ya están enlazadas con el canvas y el historial del documento:
 
-- **Selección (V)** &mdash; Permite seleccionar aristas individuales o por marco rectangular y eliminar la selección con Supr/Backspace.
+- **Selección (V)** &mdash; Permite seleccionar aristas individuales o por marco rectangular, eliminar la selección con Supr/Backspace y actualizar el tipo de pliegue desde el panel lateral.
 - **Mover (M)** &mdash; Traslada la selección activa con arrastre directo y registra la distancia recorrida.
 - **Escalar (S)** &mdash; Aplica un escalado uniforme alrededor del centroide de la selección conservando un snapshot para cancelar.
 - **Simetría (Y)** &mdash; Refleja aristas dibujadas respecto a una arista base conservando su tipo de pliegue.
 - **Bisectriz (B)** &mdash; Calcula la bisectriz de dos aristas existentes y genera una nueva arista usando su punto de intersección.
 - **Perpendicular (P)** &mdash; Traza aristas ortogonales a una arista base seleccionada y reutiliza el tipo de pliegue original.
 - **Segmento (L)** &mdash; Traza nuevas aristas de pliegue en el patrón activo.
+
+Además de las herramientas, la **inspección de selección** del panel lateral muestra el tamaño de la selección y permite asignar rápidamente los tipos estándar (montaña, valle, borde, auxiliar) a todas las aristas seleccionadas.
 
 ## Next steps
 

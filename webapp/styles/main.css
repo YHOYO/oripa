@@ -133,6 +133,58 @@ body {
   font-style: italic;
 }
 
+.selection-group {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.selection-inspector h2 {
+  margin-bottom: 0.5rem;
+}
+
+.selection-summary {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.selection-types {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selection-types legend {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0 0.25rem;
+}
+
+.selection-type-option {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.selection-type-option input:disabled + span {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.selection-type-option input:checked + span {
+  color: var(--accent);
+}
+
 @media (max-width: 960px) {
   .app-main {
     grid-template-columns: 1fr;

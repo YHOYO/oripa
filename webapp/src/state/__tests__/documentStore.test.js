@@ -198,6 +198,44 @@ test("recordEdgeScaling appends history metadata", () => {
   assert.deepEqual(lastEntry.metadata.pivot, { x: 10, y: 10 });
 });
 
+test("setEdgeType updates the requested edges and registers history", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const before = store.getDocument();
+  const [edgeA, edgeB] = before.edges;
+  const initialHistory = before.history.length;
+
+  store.setEdgeType([edgeA.id, edgeB.id], "mountain");
+
+  const after = store.getDocument();
+  const updatedEdgeA = after.edges.find((edge) => edge.id === edgeA.id);
+  const updatedEdgeB = after.edges.find((edge) => edge.id === edgeB.id);
+
+  assert.equal(updatedEdgeA.type, "mountain");
+  assert.equal(updatedEdgeB.type, "mountain");
+  assert.equal(after.history.length, initialHistory + 1);
+  const lastHistory = after.history.at(-1);
+  assert.match(lastHistory.label, /Tipo actualizado/);
+  assert.deepEqual(lastHistory.metadata.edges, [edgeA.id, edgeB.id]);
+  assert.equal(lastHistory.metadata.type, "mountain");
+});
+
+test("setSelectedEdgesType reuses the current selection", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const doc = store.getDocument();
+  const [edgeA] = doc.edges;
+
+  store.setSelectedEdges([edgeA.id]);
+  store.setSelectedEdgesType("valley");
+
+  const updated = store.getDocument();
+  const changedEdge = updated.edges.find((edge) => edge.id === edgeA.id);
+  assert.equal(changedEdge.type, "valley");
+});
+
 test("deleteEdges removes edges, selection box, and records metadata", () => {
   const store = createDocumentStore();
   store.bootstrapEmptyDocument();
