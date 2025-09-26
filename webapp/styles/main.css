@@ -1,0 +1,145 @@
+:root {
+  color-scheme: light dark;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  --bg: #101418;
+  --bg-panel: #192028;
+  --bg-sidebar: #151b22;
+  --fg: #f5f7fa;
+  --accent: #3fa9f5;
+  --accent-muted: rgba(63, 169, 245, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.app-header,
+.app-footer {
+  padding: 1rem 2rem;
+  background: var(--bg-panel);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.app-footer {
+  border-bottom: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.app-main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 0;
+}
+
+.canvas-panel {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg);
+}
+
+#cp-canvas {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  background: #0c0f13;
+  touch-action: none;
+}
+
+.sidebar {
+  background: var(--bg-sidebar);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sidebar ul,
+.sidebar ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  min-height: 3rem;
+}
+
+.sidebar li {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tool-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.tool-list li:hover,
+.tool-list li:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.tool-list li.active {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.tool-list li.placeholder {
+  cursor: default;
+  display: block;
+}
+
+.tool-list li kbd {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.sidebar li:last-child {
+  border-bottom: none;
+}
+
+.sidebar li.placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+@media (max-width: 960px) {
+  .app-main {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}

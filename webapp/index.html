@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ORIPA Web Prototype</title>
+    <link rel="stylesheet" href="styles/main.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>ORIPA Web</h1>
+      <p id="app-phase-indicator" aria-live="polite"></p>
+    </header>
+    <main class="app-main">
+      <section class="canvas-panel">
+        <canvas id="cp-canvas" width="1280" height="720" role="img" aria-label="Crease pattern canvas"></canvas>
+      </section>
+      <aside class="sidebar" aria-label="Toolbox">
+        <section class="tool-group">
+          <h2>Tools</h2>
+          <ul id="tool-list"></ul>
+        </section>
+        <section class="history-group">
+          <h2>History</h2>
+          <ol id="history-list"></ol>
+        </section>
+      </aside>
+    </main>
+    <footer class="app-footer">
+      <small>Phase scaffolding build &mdash; not for production use.</small>
+    </footer>
+    <script type="module" src="src/app/bootstrap.js"></script>
+  </body>
+</html>

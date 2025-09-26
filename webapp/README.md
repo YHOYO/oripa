@@ -1,0 +1,77 @@
+# ORIPA Web Prototype – Phase 2
+
+This directory contains the base project scaffolding for the HTML5/JavaScript reimplementation of ORIPA. The goal for **Phase 2** is to establish a maintainable structure that future sessions can extend with the full feature set documented in [`documents/web/web_reimplementation_spec.md`](../documents/web/web_reimplementation_spec.md).
+
+## Directory layout
+
+```
+webapp/
+├── index.html            # Shell document that loads the ESM application.
+├── styles/
+│   └── main.css          # Global styling for the prototype layout.
+└── src/
+    ├── app/              # Bootstrap helpers and cross-cutting composition.
+    ├── core/
+    │   └── geometry/     # Vector, segment, ray primitives and math utilities.
+    ├── io/               # (Reserved) file import/export adapters.
+    ├── rendering/        # Canvas/SVG rendering layers.
+    ├── state/            # Reactive state containers and models.
+    └── ui/               # DOM-level presentation components.
+```
+
+Only a minimal subset of folders currently contain files; placeholders exist to clarify ownership for upcoming phases. The
+`core/geometry` primitives fuel both rendering and future folding checks.
+
+## Development workflows
+
+The project now ships with linting and formatting tooling to keep the early-stage codebase consistent.
+
+### Prerequisites
+
+- Node.js 18 or newer (the scripts rely on native ES modules).
+
+Run the following commands from the `webapp/` directory:
+
+| Command | Description |
+| --- | --- |
+| `npm install` | Installs ESLint and Prettier dev dependencies. |
+| `npm run lint` | Checks all `src/**/*.js` modules with ESLint. |
+| `npm run test` | Executes the geometry unit tests with Node's built-in test runner. |
+| `npm run format` | Verifies JS and CSS files with Prettier (no changes). |
+| `npm run format:write` | Applies Prettier formatting to JS and CSS assets. |
+
+These scripts will be hooked into future CI once automated workflows are defined.
+
+## Application bootstrap
+
+The entry point `src/app/bootstrap.js` wires together:
+
+* `createDocumentStore` &mdash; an observable store that emits the crease-pattern document state.
+* `createCanvasPresenter` &mdash; the 2D renderer responsible for drawing grid and edge layers.
+* `createToolRegistry` and `createHistoryTimeline` &mdash; lightweight DOM presenters to populate the sidebar.
+
+When the page loads the application:
+
+1. Mounts the UI presenters onto the DOM.
+2. Subscribes them to the document store.
+3. Emits an initial crease-pattern document that pre-populates a square frame, diagonals, and spokes using the shared geometry
+   utilities.
+4. Updates the header indicator with the active roadmap phase ("Phase 2 · Proyecto base").
+
+## Herramientas disponibles (avance Fase 2)
+
+Las primeras herramientas interactivas ya están enlazadas con el canvas y el historial del documento:
+
+- **Selección (V)** &mdash; Permite seleccionar aristas individuales o por marco rectangular y eliminar la selección con Supr/Backspace.
+- **Mover (M)** &mdash; Traslada la selección activa con arrastre directo y registra la distancia recorrida.
+- **Escalar (S)** &mdash; Aplica un escalado uniforme alrededor del centroide de la selección conservando un snapshot para cancelar.
+- **Simetría (Y)** &mdash; Refleja aristas dibujadas respecto a una arista base conservando su tipo de pliegue.
+- **Bisectriz (B)** &mdash; Calcula la bisectriz de dos aristas existentes y genera una nueva arista usando su punto de intersección.
+- **Perpendicular (P)** &mdash; Traza aristas ortogonales a una arista base seleccionada y reutiliza el tipo de pliegue original.
+- **Segmento (L)** &mdash; Traza nuevas aristas de pliegue en el patrón activo.
+
+## Next steps
+
+Phase 3 and beyond will replace the placeholder data with live editing tools, extend the document model to include vertices, constraints, and undo/redo stacks, and add feature-complete rendering. Refer to the session log for planned milestones.
+
+See `documents/web/samples/README.md` for curated `.opx` fixtures and the manual checklist used during Phase 2 validation.
