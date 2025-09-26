@@ -6,15 +6,19 @@ import { parseCp, serializeCp } from "../io/cp.js";
 
 const VALID_EDGE_TYPES = new Set(["mountain", "valley", "border", "auxiliary"]);
 
-function createInitialDocument() {
+function createInitialDocument({ sequence = 1, name } = {}) {
   const timestamp = new Date().toISOString();
   const edges = createInitialEdges();
   const vertices = extractVertices(edges);
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+  const fallbackName =
+    sequence === 1 ? "Untitled crease pattern" : `Untitled crease pattern (${sequence})`;
 
   return {
-    id: "untitled-1",
-    name: "Untitled crease pattern",
+    id: `untitled-${sequence}`,
+    name: trimmedName.length > 0 ? trimmedName : fallbackName,
     createdAt: timestamp,
+    updatedAt: timestamp,
     vertices,
     edges,
     selection: {
@@ -92,24 +96,229 @@ function extractVertices(edges) {
 }
 
 export function createDocumentStore() {
-  const observable = createObservable();
+  const documentObservable = createObservable();
+  const projectObservable = createObservable();
   let currentDocument = null;
+  let documents = [];
+  let activeDocumentId = null;
   let edgeCounter = 0;
   let historyCounter = 0;
+  let untitledCounter = 1;
   let clipboard = createClipboardState();
 
   function bootstrapEmptyDocument() {
-    setDocument(createInitialDocument());
+    if (documents.length > 0 && currentDocument) {
+      emitAll();
+      return;
+    }
+
+    const sequence = untitledCounter;
+    untitledCounter += 1;
+    setDocument(createInitialDocument({ sequence }));
   }
 
   function getDocument() {
     return currentDocument;
   }
 
+  function getDocuments() {
+    return getProjectState().documents;
+  }
+
+  function getActiveDocumentId() {
+    return activeDocumentId;
+  }
+
   function setDocument(document) {
-    currentDocument = document ?? null;
+    commitDocument(document ?? null);
+  }
+
+  function setActiveDocument(documentId) {
+    if (typeof documentId !== "string" || documentId.length === 0) {
+      return;
+    }
+
+    if (documentId === activeDocumentId) {
+      return;
+    }
+
+    const target = documents.find((doc) => doc.id === documentId);
+    if (!target) {
+      return;
+    }
+
+    currentDocument = target;
+    activeDocumentId = target.id;
     updateCountersFromDocument(currentDocument);
-    observable.emit(currentDocument);
+    emitAll();
+  }
+
+  function createNewDocument(options = {}) {
+    const sequence = untitledCounter;
+    untitledCounter += 1;
+    const document = createInitialDocument({ sequence, name: options?.name });
+    commitDocument(document);
+    return document.id;
+  }
+
+  function closeDocument(documentId) {
+    if (documents.length === 0) {
+      return;
+    }
+
+    const targetId =
+      typeof documentId === "string" && documentId.length > 0 ? documentId : activeDocumentId;
+
+    if (!targetId) {
+      return;
+    }
+
+    const index = documents.findIndex((doc) => doc.id === targetId);
+    if (index < 0) {
+      return;
+    }
+
+    const wasActive = targetId === activeDocumentId;
+    const nextDocuments = [...documents.slice(0, index), ...documents.slice(index + 1)];
+    documents = nextDocuments;
+
+    if (!wasActive) {
+      emitProjectState();
+      return;
+    }
+
+    if (nextDocuments.length === 0) {
+      const sequence = untitledCounter;
+      untitledCounter += 1;
+      commitDocument(createInitialDocument({ sequence }));
+      return;
+    }
+
+    const nextIndex = index >= nextDocuments.length ? nextDocuments.length - 1 : index;
+    commitDocument(nextDocuments[nextIndex]);
+  }
+
+  function renameDocument(documentId, name) {
+    const trimmed = typeof name === "string" ? name.trim() : "";
+    if (trimmed.length === 0) {
+      return false;
+    }
+
+    const targetId =
+      typeof documentId === "string" && documentId.length > 0 ? documentId : activeDocumentId;
+
+    if (!targetId) {
+      return false;
+    }
+
+    const index = documents.findIndex((doc) => doc.id === targetId);
+    if (index < 0) {
+      return false;
+    }
+
+    const document = documents[index];
+    if (document.name === trimmed) {
+      return false;
+    }
+
+    const updated = {
+      ...document,
+      name: trimmed,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const copy = [...documents];
+    copy[index] = updated;
+    documents = copy;
+
+    if (targetId === activeDocumentId) {
+      currentDocument = updated;
+      updateCountersFromDocument(currentDocument);
+      emitAll();
+    } else {
+      emitProjectState();
+    }
+
+    return true;
+  }
+
+  function commitDocument(document) {
+    if (!document) {
+      currentDocument = null;
+      documents = [];
+      activeDocumentId = null;
+      updateCountersFromDocument(null);
+      emitAll();
+      return;
+    }
+
+    if (typeof document.id !== "string" || document.id.length === 0) {
+      throw new Error("document requires a stable id");
+    }
+
+    const normalized =
+      document && !document.updatedAt
+        ? { ...document, updatedAt: new Date().toISOString() }
+        : document;
+
+    const existingIndex = documents.findIndex((candidate) => candidate.id === normalized.id);
+    if (existingIndex >= 0) {
+      const nextDocuments = [...documents];
+      nextDocuments[existingIndex] = normalized;
+      documents = nextDocuments;
+    } else {
+      documents = [...documents, normalized];
+    }
+
+    currentDocument = normalized;
+    activeDocumentId = normalized.id;
+    updateCountersFromDocument(currentDocument);
+    updateUntitledCounter(normalized);
+    emitAll();
+  }
+
+  function emitAll() {
+    emitDocumentState();
+    emitProjectState();
+  }
+
+  function emitDocumentState() {
+    documentObservable.emit(currentDocument);
+  }
+
+  function emitProjectState() {
+    projectObservable.emit(getProjectState());
+  }
+
+  function getProjectState() {
+    return {
+      activeDocumentId,
+      documents: documents.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt ?? doc.createdAt,
+        edgeCount: Array.isArray(doc.edges) ? doc.edges.length : 0,
+      })),
+    };
+  }
+
+  function updateUntitledCounter(document) {
+    if (!document || typeof document.id !== "string") {
+      return;
+    }
+
+    const match = document.id.match(/^untitled-(\d+)$/);
+    if (!match) {
+      return;
+    }
+
+    const value = Number(match[1]);
+    if (!Number.isFinite(value)) {
+      return;
+    }
+
+    untitledCounter = Math.max(untitledCounter, value + 1);
   }
 
   function updateCountersFromDocument(document) {
@@ -143,8 +352,17 @@ export function createDocumentStore() {
       throw new Error("mutation must be a function");
     }
 
-    const nextDocument = mutation(currentDocument);
-    setDocument(nextDocument);
+    const candidate = mutation(currentDocument);
+    if (!candidate || candidate === currentDocument) {
+      return;
+    }
+
+    const normalized =
+      candidate && !candidate.updatedAt
+        ? { ...candidate, updatedAt: new Date().toISOString() }
+        : candidate;
+
+    commitDocument(normalized);
   }
 
   function importFromOpx(xmlSource) {
@@ -869,10 +1087,18 @@ export function createDocumentStore() {
   }
 
   return {
-    subscribe: observable.subscribe,
+    subscribe: documentObservable.subscribe,
+    subscribeToDocuments: projectObservable.subscribe,
     bootstrapEmptyDocument,
     getDocument,
+    getDocuments,
+    getActiveDocumentId,
+    getProjectState,
     setDocument,
+    setActiveDocument,
+    createNewDocument,
+    closeDocument,
+    renameDocument,
     importFromOpx,
     exportToOpx,
     importFromCp,

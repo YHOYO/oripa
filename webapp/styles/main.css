@@ -29,6 +29,172 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.app-header__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-header__title h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.app-header__title p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.document-tabs {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.document-tabs__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.document-tabs__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  overflow-x: auto;
+}
+
+.document-tabs__item {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.document-tabs__item.is-active {
+  background: var(--accent-muted);
+  color: var(--accent);
+  border-color: rgba(63, 169, 245, 0.45);
+}
+
+.document-tabs__tab {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.document-tabs__tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.document-tabs__close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.document-tabs__close:hover,
+.document-tabs__close:focus-visible {
+  color: var(--accent);
+}
+
+.document-tabs__new {
+  border: none;
+  background: var(--accent);
+  color: #041625;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.document-tabs__new:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.document-tabs__rename {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.document-tabs__rename-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.document-tabs__rename input {
+  flex: 1 1 200px;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  padding: 0.45rem 0.6rem;
+}
+
+.document-tabs__rename input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.document-tabs__rename-action {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+.document-tabs__rename-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.document-tabs__summary {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.document-tabs__placeholder {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
+}
+
 .app-footer {
   border-bottom: none;
   border-top: 1px solid rgba(255, 255, 255, 0.05);

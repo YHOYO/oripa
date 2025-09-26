@@ -32,6 +32,76 @@ test("addEdge appends a new edge and history entry", () => {
   assert.match(lastHistory.label, /Segmento añadido/i);
 });
 
+test("bootstrapEmptyDocument initializes the project summary", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const project = store.getProjectState();
+  const document = store.getDocument();
+
+  assert.equal(project.documents.length, 1);
+  assert.equal(project.activeDocumentId, document.id);
+  assert.equal(project.documents[0].id, document.id);
+});
+
+test("createNewDocument appends and activates a new document", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const firstId = store.getDocument().id;
+  const createdId = store.createNewDocument({ name: "Segundo patrón" });
+
+  assert.notEqual(createdId, firstId);
+  assert.equal(store.getDocument().id, createdId);
+  assert.equal(store.getDocuments().length, 2);
+
+  store.setActiveDocument(firstId);
+  assert.equal(store.getDocument().id, firstId);
+});
+
+test("closeDocument removes entries and keeps at least one document", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+  const firstId = store.getDocument().id;
+  const secondId = store.createNewDocument();
+
+  store.closeDocument(secondId);
+  assert.equal(store.getDocuments().length, 1);
+  assert.equal(store.getDocument().id, firstId);
+
+  store.closeDocument(firstId);
+  assert.equal(store.getDocuments().length, 1);
+  assert.notEqual(store.getDocument().id, firstId);
+});
+
+test("renameDocument updates the active document name", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const result = store.renameDocument(undefined, "Patrón renombrado");
+
+  assert.equal(result, true);
+  assert.equal(store.getDocument().name, "Patrón renombrado");
+  assert.equal(store.getDocuments()[0].name, "Patrón renombrado");
+});
+
+test("subscribeToDocuments notifies project updates", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const received = [];
+  const unsubscribe = store.subscribeToDocuments((snapshot) => {
+    received.push(snapshot);
+  });
+
+  store.createNewDocument();
+  store.renameDocument(undefined, "Renombrado");
+  unsubscribe();
+
+  assert.ok(received.length >= 2);
+  assert.equal(received.at(-1).documents.at(-1).name, "Renombrado");
+});
+
 test("addEdge requires initialized document", () => {
   const store = createDocumentStore();
   assert.throws(() => {

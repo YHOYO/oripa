@@ -13,6 +13,7 @@ import { createSymmetryTool } from "../tools/symmetryTool.js";
 import { createSelectionInspector } from "../ui/selectionInspector.js";
 import { createPersistenceControls } from "../ui/persistenceControls.js";
 import { createClipboardControls } from "../ui/clipboardControls.js";
+import { createDocumentTabs } from "../ui/documentTabs.js";
 
 export function createApplication({
   canvas,
@@ -21,6 +22,7 @@ export function createApplication({
   selectionPanel,
   persistencePanel,
   clipboardPanel,
+  documentTabs,
 }) {
   const documentStore = createDocumentStore();
   const historyTimeline = createHistoryTimeline();
@@ -29,6 +31,7 @@ export function createApplication({
   const selectionInspector = createSelectionInspector({ documentStore });
   const persistenceControls = createPersistenceControls({ documentStore });
   const clipboardControls = createClipboardControls({ documentStore });
+  const documentTabsPresenter = createDocumentTabs({ documentStore });
 
   const toolDefinitions = [
     createSelectTool({ documentStore }),
@@ -63,6 +66,7 @@ export function createApplication({
     selectionInspector.mount(selectionPanel);
     persistenceControls.mount(persistencePanel);
     clipboardControls.mount(clipboardPanel);
+    documentTabsPresenter.mount(documentTabs);
 
     documentStore.subscribe(canvasPresenter.render);
     documentStore.subscribe(historyTimeline.render);

@@ -74,6 +74,12 @@ Además de las herramientas, la **inspección de selección** del panel lateral 
 
 El nuevo panel de **portapapeles** habilita atajos nativos (Ctrl/Cmd+C, X, V) y controles visibles para copiar, cortar y pegar la selección actual. Cada pegado genera aristas nuevas con desplazamientos configurables y registra la operación en el historial para mantener trazabilidad.
 
+## Gestión de documentos
+
+- **Pestañas de proyectos** &mdash; El encabezado de la aplicación muestra todos los patrones abiertos, permitiendo alternar entre ellos sin perder el estado.
+- **Creación y cierre** &mdash; Es posible abrir múltiples documentos vacíos en paralelo y cerrar cualquiera de ellos; siempre se mantiene al menos un patrón disponible.
+- **Renombrado en línea** &mdash; El formulario contextual actualiza el nombre del documento activo y sincroniza el cambio con el panel de archivo y el historial.
+
 ## Persistencia inicial
 
 - **Importación `.opx`** &mdash; El estado de la aplicación puede reemplazarse desde archivos XML de ORIPA (subset `OriLineProxy`). La barra lateral expone un selector de archivos que procesa las cargas directamente en el navegador.

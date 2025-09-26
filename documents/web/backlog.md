@@ -81,6 +81,8 @@
 | UI-3 | Implementar administrador de múltiples patrones con pestañas. | Media | 3 | PER-1 |
 | UI-4 | Integrar guardado automático en IndexedDB. | Media | 3 | PER-1 |
 
+> **Actualización 2024-05-18**: El store gestiona múltiples documentos con pestañas, renombrado y cierre, habilitando el flujo de trabajo multi-proyecto (UI-3).
+
 ## Automatizaciones
 | ID | Historia | P | E | Dep |
 | --- | --- | --- | --- | --- |

@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectionPanel: document.getElementById("selection-panel"),
     persistencePanel: document.getElementById("persistence-panel"),
     clipboardPanel: document.getElementById("clipboard-panel"),
+    documentTabs: document.getElementById("document-tabs"),
   });
 
   const updatePhaseLabel = createPhaseIndicator({
