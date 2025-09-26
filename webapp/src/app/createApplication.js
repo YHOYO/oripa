@@ -11,13 +11,21 @@ import { createPerpendicularTool } from "../tools/perpendicularTool.js";
 import { createBisectorTool } from "../tools/bisectorTool.js";
 import { createSymmetryTool } from "../tools/symmetryTool.js";
 import { createSelectionInspector } from "../ui/selectionInspector.js";
+import { createPersistenceControls } from "../ui/persistenceControls.js";
 
-export function createApplication({ canvas, toolList, historyList, selectionPanel }) {
+export function createApplication({
+  canvas,
+  toolList,
+  historyList,
+  selectionPanel,
+  persistencePanel,
+}) {
   const documentStore = createDocumentStore();
   const historyTimeline = createHistoryTimeline();
   const canvasPresenter = createCanvasPresenter({ canvas, documentStore });
   const toolController = createToolController({ canvas, documentStore });
   const selectionInspector = createSelectionInspector({ documentStore });
+  const persistenceControls = createPersistenceControls({ documentStore });
 
   const toolDefinitions = [
     createSelectTool({ documentStore }),
@@ -50,6 +58,7 @@ export function createApplication({ canvas, toolList, historyList, selectionPane
     toolRegistry.mount(toolList);
     historyTimeline.mount(historyList);
     selectionInspector.mount(selectionPanel);
+    persistenceControls.mount(persistencePanel);
 
     documentStore.subscribe(canvasPresenter.render);
     documentStore.subscribe(historyTimeline.render);

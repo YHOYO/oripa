@@ -74,8 +74,8 @@ Además de las herramientas, la **inspección de selección** del panel lateral 
 
 ## Persistencia inicial
 
-- **Importación `.opx`** &mdash; El estado de la aplicación puede reemplazarse desde archivos XML de ORIPA (subset `OriLineProxy`).
-- **Exportación `.opx`** &mdash; El documento activo se serializa nuevamente al formato esperado por ORIPA para facilitar intercambio temprano.
+- **Importación `.opx`** &mdash; El estado de la aplicación puede reemplazarse desde archivos XML de ORIPA (subset `OriLineProxy`). La barra lateral expone un selector de archivos que procesa las cargas directamente en el navegador.
+- **Exportación `.opx`** &mdash; El documento activo se serializa nuevamente al formato esperado por ORIPA y el panel de archivo descarga automáticamente el resultado.
 
 ## Next steps
 

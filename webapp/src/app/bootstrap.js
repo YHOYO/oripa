@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toolList: document.getElementById("tool-list"),
     historyList: document.getElementById("history-list"),
     selectionPanel: document.getElementById("selection-panel"),
+    persistencePanel: document.getElementById("persistence-panel"),
   });
 
   const updatePhaseLabel = createPhaseIndicator({
