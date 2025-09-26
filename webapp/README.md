@@ -72,6 +72,8 @@ Las primeras herramientas interactivas ya están enlazadas con el canvas y el hi
 
 Además de las herramientas, la **inspección de selección** del panel lateral muestra el tamaño de la selección y permite asignar rápidamente los tipos estándar (montaña, valle, borde, auxiliar) a todas las aristas seleccionadas.
 
+El nuevo panel de **portapapeles** habilita atajos nativos (Ctrl/Cmd+C, X, V) y controles visibles para copiar, cortar y pegar la selección actual. Cada pegado genera aristas nuevas con desplazamientos configurables y registra la operación en el historial para mantener trazabilidad.
+
 ## Persistencia inicial
 
 - **Importación `.opx`** &mdash; El estado de la aplicación puede reemplazarse desde archivos XML de ORIPA (subset `OriLineProxy`). La barra lateral expone un selector de archivos que procesa las cargas directamente en el navegador.

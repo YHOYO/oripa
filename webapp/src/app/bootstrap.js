@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     historyList: document.getElementById("history-list"),
     selectionPanel: document.getElementById("selection-panel"),
     persistencePanel: document.getElementById("persistence-panel"),
+    clipboardPanel: document.getElementById("clipboard-panel"),
   });
 
   const updatePhaseLabel = createPhaseIndicator({

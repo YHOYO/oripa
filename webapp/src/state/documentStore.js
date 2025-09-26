@@ -96,6 +96,7 @@ export function createDocumentStore() {
   let currentDocument = null;
   let edgeCounter = 0;
   let historyCounter = 0;
+  let clipboard = createClipboardState();
 
   function bootstrapEmptyDocument() {
     setDocument(createInitialDocument());
@@ -714,6 +715,159 @@ export function createDocumentStore() {
     });
   }
 
+  function copyEdges(edgeIds) {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before copying");
+    }
+
+    const targetIds = normalizeEdgeIds(edgeIds);
+    if (targetIds.length === 0) {
+      return 0;
+    }
+
+    const edgesById = new Map((currentDocument.edges ?? []).map((edge) => [edge.id, edge]));
+    const snapshot = targetIds
+      .map((edgeId) => edgesById.get(edgeId))
+      .filter((edge) => edge && edge.start && edge.end)
+      .map((edge) => ({
+        id: edge.id,
+        type: edge.type ?? "auxiliary",
+        start: { ...edge.start },
+        end: { ...edge.end },
+      }));
+
+    if (snapshot.length === 0) {
+      return 0;
+    }
+
+    const bounds = calculateBounds(snapshot);
+    clipboard = {
+      edges: snapshot,
+      bounds,
+      centroid: bounds ? calculateCentroid(bounds) : null,
+      updatedAt: new Date().toISOString(),
+      offsetCount: 0,
+    };
+
+    return snapshot.length;
+  }
+
+  function cutEdges(edgeIds) {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before cutting");
+    }
+
+    const copied = copyEdges(edgeIds);
+    if (copied === 0) {
+      return 0;
+    }
+
+    deleteEdges(edgeIds);
+    return copied;
+  }
+
+  function copySelectedEdges() {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before copying the selection");
+    }
+
+    const selected = currentDocument.selection?.edges ?? [];
+    return copyEdges(selected);
+  }
+
+  function cutSelectedEdges() {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before cutting the selection");
+    }
+
+    const selected = currentDocument.selection?.edges ?? [];
+    return cutEdges(selected);
+  }
+
+  function pasteClipboard(options = {}) {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before pasting");
+    }
+
+    if (!clipboard?.edges || clipboard.edges.length === 0) {
+      return [];
+    }
+
+    const offset = determinePasteOffset(options, clipboard);
+    const dx = Number((offset.dx ?? 0).toFixed(3));
+    const dy = Number((offset.dy ?? 0).toFixed(3));
+
+    const timestamp = new Date().toISOString();
+    const baseEdgeCounter = edgeCounter;
+
+    const newEdges = clipboard.edges.map((edge, index) => ({
+      id: `edge-${baseEdgeCounter + index + 1}`,
+      type: edge.type ?? "auxiliary",
+      start: roundPoint({
+        x: edge.start.x + dx,
+        y: edge.start.y + dy,
+      }),
+      end: roundPoint({
+        x: edge.end.x + dx,
+        y: edge.end.y + dy,
+      }),
+    }));
+
+    const newEdgeIds = newEdges.map((edge) => edge.id);
+
+    applyMutation((doc) => {
+      if (!doc) {
+        return doc;
+      }
+
+      const edges = [...(doc.edges ?? []), ...newEdges];
+      const vertices = extractVertices(edges);
+      const history = [
+        ...doc.history,
+        {
+          id: `history-${historyCounter + 1}`,
+          label: `Pegado (${newEdges.length} segmento${newEdges.length === 1 ? "" : "s"})`,
+          timestamp,
+          metadata: {
+            edges: newEdgeIds,
+            offset: { x: dx, y: dy },
+          },
+        },
+      ];
+
+      return {
+        ...doc,
+        edges,
+        vertices,
+        selection: {
+          edges: newEdgeIds,
+          box: null,
+        },
+        history,
+        counters: {
+          ...(doc.counters ?? {}),
+          edges: Math.max(doc.counters?.edges ?? 0, edges.length),
+          history: history.length,
+        },
+      };
+    });
+
+    clipboard = {
+      ...clipboard,
+      offsetCount: (clipboard?.offsetCount ?? 0) + 1,
+    };
+
+    return newEdgeIds;
+  }
+
+  function getClipboardSummary() {
+    return {
+      count: clipboard?.edges?.length ?? 0,
+      updatedAt: clipboard?.updatedAt ?? null,
+      bounds: clipboard?.bounds ?? null,
+    };
+  }
+
   return {
     subscribe: observable.subscribe,
     bootstrapEmptyDocument,
@@ -736,6 +890,12 @@ export function createDocumentStore() {
     deleteSelectedEdges,
     setEdgeType,
     setSelectedEdgesType,
+    copyEdges,
+    cutEdges,
+    copySelectedEdges,
+    cutSelectedEdges,
+    pasteClipboard,
+    getClipboardSummary,
   };
 }
 
@@ -986,4 +1146,43 @@ function normalizeEdgeType(type) {
   }
 
   return normalized;
+}
+
+function createClipboardState() {
+  return {
+    edges: [],
+    bounds: null,
+    centroid: null,
+    updatedAt: null,
+    offsetCount: 0,
+  };
+}
+
+function determinePasteOffset(options, clipboardState) {
+  const normalizedOffset = normalizeDelta(options?.offset ?? options?.delta);
+  if (normalizedOffset) {
+    return normalizedOffset;
+  }
+
+  const targetPoint = options?.targetPoint ?? options?.target ?? options?.point;
+  if (isValidPoint(targetPoint) && clipboardState?.centroid) {
+    return {
+      dx: targetPoint.x - clipboardState.centroid.x,
+      dy: targetPoint.y - clipboardState.centroid.y,
+    };
+  }
+
+  const step = 20;
+  const multiplier = (clipboardState?.offsetCount ?? 0) + 1;
+  return { dx: step * multiplier, dy: step * multiplier };
+}
+
+function calculateCentroid(bounds) {
+  if (!bounds) {
+    return null;
+  }
+
+  const centerX = (bounds.minX + bounds.maxX) / 2;
+  const centerY = (bounds.minY + bounds.maxY) / 2;
+  return { x: centerX, y: centerY };
 }

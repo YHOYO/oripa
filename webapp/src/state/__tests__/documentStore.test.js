@@ -292,6 +292,98 @@ test("deleteSelectedEdges removes all selected edges with a single history entry
   assert.equal(after.history.length, historyBefore + 1);
 });
 
+test("copySelectedEdges stores clipboard metadata and paste duplicates the snapshot", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const doc = store.getDocument();
+  const [edgeA, edgeB] = doc.edges;
+  store.setSelectedEdges([edgeA.id, edgeB.id]);
+
+  const copied = store.copySelectedEdges();
+  assert.equal(copied, 2);
+
+  const clipboard = store.getClipboardSummary();
+  assert.equal(clipboard.count, 2);
+
+  const beforePaste = store.getDocument();
+  const initialEdgeCount = beforePaste.edges.length;
+
+  const pastedIds = store.pasteClipboard({ offset: { dx: 10, dy: -5 } });
+  assert.equal(pastedIds.length, 2);
+
+  const after = store.getDocument();
+  assert.equal(after.edges.length, initialEdgeCount + 2);
+  assert.deepEqual(after.selection.edges, pastedIds);
+
+  const insertedEdges = pastedIds.map((id) => after.edges.find((edge) => edge.id === id));
+  insertedEdges.forEach((edge, index) => {
+    const source = index === 0 ? edgeA : edgeB;
+    assert.deepEqual(edge.start, {
+      x: Number((source.start.x + 10).toFixed(3)),
+      y: Number((source.start.y - 5).toFixed(3)),
+    });
+    assert.deepEqual(edge.end, {
+      x: Number((source.end.x + 10).toFixed(3)),
+      y: Number((source.end.y - 5).toFixed(3)),
+    });
+  });
+
+  const lastHistory = after.history.at(-1);
+  assert.match(lastHistory.label, /Pegado/);
+  assert.deepEqual(lastHistory.metadata.edges, pastedIds);
+  assert.deepEqual(lastHistory.metadata.offset, { x: 10, y: -5 });
+});
+
+test("cutSelectedEdges removes edges while keeping the clipboard snapshot", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const doc = store.getDocument();
+  const target = doc.edges[0];
+
+  store.setSelectedEdges([target.id]);
+  const removed = store.cutSelectedEdges();
+
+  assert.equal(removed, 1);
+  const after = store.getDocument();
+  assert.equal(
+    after.edges.some((edge) => edge.id === target.id),
+    false,
+  );
+  assert.deepEqual(after.selection.edges, []);
+
+  const clipboard = store.getClipboardSummary();
+  assert.equal(clipboard.count, 1);
+});
+
+test("pasteClipboard centers the snapshot around the requested target point", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const doc = store.getDocument();
+  const sourceId = doc.edges[0].id;
+  store.setSelectedEdges([sourceId]);
+  store.copySelectedEdges();
+
+  const pastedIds = store.pasteClipboard({ targetPoint: { x: 50, y: 75 } });
+  assert.equal(pastedIds.length, 1);
+
+  const after = store.getDocument();
+  const inserted = after.edges.find((edge) => edge.id === pastedIds[0]);
+  const bounds = {
+    minX: Math.min(inserted.start.x, inserted.end.x),
+    maxX: Math.max(inserted.start.x, inserted.end.x),
+    minY: Math.min(inserted.start.y, inserted.end.y),
+    maxY: Math.max(inserted.start.y, inserted.end.y),
+  };
+
+  const centerX = (bounds.minX + bounds.maxX) / 2;
+  const centerY = (bounds.minY + bounds.maxY) / 2;
+  assert.ok(Math.abs(centerX - 50) < 0.001);
+  assert.ok(Math.abs(centerY - 75) < 0.001);
+});
+
 test("importFromOpx replaces the document with parsed edges", () => {
   const store = createDocumentStore();
   store.bootstrapEmptyDocument();

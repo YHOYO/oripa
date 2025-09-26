@@ -139,6 +139,64 @@ body {
   padding: 1rem;
 }
 
+.clipboard-group {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clipboard-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.clipboard-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.clipboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.clipboard-action {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--fg);
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.clipboard-action:hover,
+.clipboard-action:focus-visible {
+  opacity: 0.85;
+  outline: none;
+}
+
+.clipboard-action.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+
+.clipboard-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .persistence-group {
   background: rgba(0, 0, 0, 0.12);
   border-radius: 0.5rem;

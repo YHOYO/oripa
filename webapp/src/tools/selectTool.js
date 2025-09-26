@@ -8,37 +8,79 @@ const DELETE_KEYS = new Set(["Delete", "Backspace"]);
 export function createSelectTool({ documentStore }) {
   let anchor = null;
   let lastPoint = null;
+  let cursorPoint = null;
 
   function handleKeydown(event) {
     if (event.defaultPrevented) {
       return;
     }
 
-    if (event.altKey || event.ctrlKey || event.metaKey) {
-      return;
-    }
-
-    if (!DELETE_KEYS.has(event.key)) {
-      return;
-    }
-
     const document = documentStore.getDocument();
     const selectedEdges = document?.selection?.edges ?? [];
-    if (selectedEdges.length === 0) {
+
+    if (!event.altKey && !event.ctrlKey && !event.metaKey) {
+      if (!DELETE_KEYS.has(event.key)) {
+        return;
+      }
+
+      if (selectedEdges.length === 0) {
+        return;
+      }
+
+      documentStore.deleteSelectedEdges();
+      event.preventDefault();
       return;
     }
 
-    documentStore.deleteSelectedEdges();
-    event.preventDefault();
+    if (event.altKey) {
+      return;
+    }
+
+    const usesPrimaryModifier = event.ctrlKey || event.metaKey;
+    if (!usesPrimaryModifier) {
+      return;
+    }
+
+    const key = event.key?.toLowerCase();
+    if (!key) {
+      return;
+    }
+
+    if (key === "c") {
+      if (selectedEdges.length === 0) {
+        return;
+      }
+      documentStore.copySelectedEdges();
+      event.preventDefault();
+      return;
+    }
+
+    if (key === "x") {
+      if (selectedEdges.length === 0) {
+        return;
+      }
+      documentStore.cutSelectedEdges();
+      event.preventDefault();
+      return;
+    }
+
+    if (key === "v") {
+      const pasted = documentStore.pasteClipboard({ targetPoint: cursorPoint });
+      if (pasted.length > 0) {
+        event.preventDefault();
+      }
+    }
   }
 
   function onPointerDown(event) {
     anchor = { ...event.point };
     lastPoint = { ...event.point };
+    cursorPoint = { ...event.point };
     documentStore.setSelectionBox(createBox(anchor, lastPoint));
   }
 
   function onPointerMove(event) {
+    cursorPoint = { ...event.point };
     if (!anchor) {
       return;
     }
@@ -52,6 +94,7 @@ export function createSelectTool({ documentStore }) {
       return;
     }
 
+    cursorPoint = { ...event.point };
     const releasePoint = { ...event.point };
     documentStore.setSelectionBox(null);
 

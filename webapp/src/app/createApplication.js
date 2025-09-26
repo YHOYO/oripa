@@ -12,6 +12,7 @@ import { createBisectorTool } from "../tools/bisectorTool.js";
 import { createSymmetryTool } from "../tools/symmetryTool.js";
 import { createSelectionInspector } from "../ui/selectionInspector.js";
 import { createPersistenceControls } from "../ui/persistenceControls.js";
+import { createClipboardControls } from "../ui/clipboardControls.js";
 
 export function createApplication({
   canvas,
@@ -19,6 +20,7 @@ export function createApplication({
   historyList,
   selectionPanel,
   persistencePanel,
+  clipboardPanel,
 }) {
   const documentStore = createDocumentStore();
   const historyTimeline = createHistoryTimeline();
@@ -26,6 +28,7 @@ export function createApplication({
   const toolController = createToolController({ canvas, documentStore });
   const selectionInspector = createSelectionInspector({ documentStore });
   const persistenceControls = createPersistenceControls({ documentStore });
+  const clipboardControls = createClipboardControls({ documentStore });
 
   const toolDefinitions = [
     createSelectTool({ documentStore }),
@@ -59,10 +62,12 @@ export function createApplication({
     historyTimeline.mount(historyList);
     selectionInspector.mount(selectionPanel);
     persistenceControls.mount(persistencePanel);
+    clipboardControls.mount(clipboardPanel);
 
     documentStore.subscribe(canvasPresenter.render);
     documentStore.subscribe(historyTimeline.render);
     documentStore.subscribe(selectionInspector.render);
+    documentStore.subscribe(clipboardControls.render);
 
     documentStore.bootstrapEmptyDocument();
     const initialToolId = toolDefinitions[0]?.id;

@@ -56,6 +56,8 @@
 
 > **Actualización 2024-05-16**: Revisión del plan multisesión: Fase 2 estimada en ~72 % tras completar herramientas principales y persistencia `.opx/.cp`; quedan pendientes portapapeles, múltiples documentos y exportes `.fold`/PNG.
 
+> **Actualización 2024-05-17**: El `documentStore` incluye copiar/cortar/pegar con historial y desplazamientos configurables, el panel lateral expone controles de portapapeles y los atajos Ctrl/Cmd+C, X, V quedan activos desde la herramienta de selección.
+
 ## Persistencia
 | ID | Historia | P | E | Dep |
 | --- | --- | --- | --- | --- |
