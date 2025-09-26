@@ -2,6 +2,7 @@ import { createObservable } from "./observable.js";
 import { createVector2 } from "../core/geometry/vector2.js";
 import { createLineSegment, toJSON as segmentToJSON } from "../core/geometry/lineSegment.js";
 import { parseOpx, serializeOpx } from "../io/opx.js";
+import { parseCp, serializeCp } from "../io/cp.js";
 
 const VALID_EDGE_TYPES = new Set(["mountain", "valley", "border", "auxiliary"]);
 
@@ -147,70 +148,23 @@ export function createDocumentStore() {
 
   function importFromOpx(xmlSource) {
     const parsed = parseOpx(xmlSource);
-    const lines = Array.isArray(parsed?.lines) ? parsed.lines : [];
-
-    const timestamp = new Date().toISOString();
-
-    const edges = lines
-      .map((line, index) => {
-        const startCandidate = line?.start ?? {};
-        const endCandidate = line?.end ?? {};
-        if (!isValidPoint(startCandidate) || !isValidPoint(endCandidate)) {
-          return null;
-        }
-
-        const normalizedType = normalizeEdgeType(line?.type) ?? "auxiliary";
-        const start = roundPoint(startCandidate);
-        const end = roundPoint(endCandidate);
-
-        return {
-          id: `edge-${index + 1}`,
-          type: normalizedType,
-          start,
-          end,
-        };
-      })
-      .filter(Boolean);
-
-    const vertices = extractVertices(edges);
-    const bounds = calculateBounds(edges);
-
-    const document = {
-      id: `import-${timestamp}`,
-      name: parsed?.metadata?.name ?? "Imported crease pattern",
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      edges,
-      vertices,
-      selection: { edges: [], box: null },
+    const document = createDocumentFromImportedLines(parsed?.lines, {
+      source: "opx",
+      name: parsed?.metadata?.name,
       metadata: {
-        unit: parsed?.metadata?.unit ?? "mm",
-        author: parsed?.metadata?.author ?? "",
-        source: "opx",
-        ...(bounds ? { bounds } : {}),
-        canvasBounds: bounds
-          ? {
-              width: Math.max(1280, Math.ceil(bounds.maxX - bounds.minX + 40)),
-              height: Math.max(720, Math.ceil(bounds.maxY - bounds.minY + 40)),
-            }
-          : { width: 1280, height: 720 },
+        unit: parsed?.metadata?.unit,
+        author: parsed?.metadata?.author,
       },
-      counters: {
-        edges: edges.length,
-        history: 1,
-      },
-      history: [
-        {
-          id: "history-1",
-          label: "Patrón importado (.opx)",
-          timestamp,
-          metadata: {
-            source: "opx",
-            lines: edges.length,
-          },
-        },
-      ],
-    };
+    });
+
+    setDocument(document);
+  }
+
+  function importFromCp(textSource) {
+    const parsed = parseCp(textSource);
+    const document = createDocumentFromImportedLines(parsed?.lines, {
+      source: "cp",
+    });
 
     setDocument(document);
   }
@@ -227,6 +181,16 @@ export function createDocumentStore() {
     }));
 
     return serializeOpx({ lines });
+  }
+
+  function exportToCp() {
+    if (!currentDocument) {
+      throw new Error("document must be initialized before exporting");
+    }
+
+    return serializeCp({
+      lines: currentDocument.edges ?? [],
+    });
   }
 
   function addEdge({ start, end, type = "auxiliary" }) {
@@ -757,6 +721,8 @@ export function createDocumentStore() {
     setDocument,
     importFromOpx,
     exportToOpx,
+    importFromCp,
+    exportToCp,
     applyMutation,
     addEdge,
     setSelectedEdges,
@@ -770,6 +736,86 @@ export function createDocumentStore() {
     deleteSelectedEdges,
     setEdgeType,
     setSelectedEdgesType,
+  };
+}
+
+function createDocumentFromImportedLines(lines, options = {}) {
+  const timestamp = new Date().toISOString();
+  const normalizedLines = Array.isArray(lines) ? lines : [];
+  const edges = normalizedLines
+    .map((line, index) => {
+      const startCandidate = line?.start ?? {};
+      const endCandidate = line?.end ?? {};
+
+      if (!isValidPoint(startCandidate) || !isValidPoint(endCandidate)) {
+        return null;
+      }
+
+      const normalizedType = normalizeEdgeType(line?.type) ?? "auxiliary";
+
+      return {
+        id: `edge-${index + 1}`,
+        type: normalizedType,
+        start: roundPoint(startCandidate),
+        end: roundPoint(endCandidate),
+      };
+    })
+    .filter(Boolean);
+
+  const vertices = extractVertices(edges);
+  const bounds = calculateBounds(edges);
+
+  const normalizedSource =
+    typeof options.source === "string" && options.source.length > 0
+      ? options.source.toLowerCase()
+      : "external";
+
+  const labelSuffix = normalizedSource === "external" ? "" : ` (.${normalizedSource})`;
+  const metadata = options.metadata ?? {};
+  const unit = typeof metadata.unit === "string" && metadata.unit.length > 0 ? metadata.unit : "mm";
+  const author = typeof metadata.author === "string" ? metadata.author : "";
+  const nameCandidate =
+    typeof options.name === "string" && options.name.trim().length > 0
+      ? options.name.trim()
+      : "Imported crease pattern";
+
+  const canvasBounds = bounds
+    ? {
+        width: Math.max(1280, Math.ceil(bounds.maxX - bounds.minX + 40)),
+        height: Math.max(720, Math.ceil(bounds.maxY - bounds.minY + 40)),
+      }
+    : { width: 1280, height: 720 };
+
+  return {
+    id: `import-${timestamp}`,
+    name: nameCandidate,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    edges,
+    vertices,
+    selection: { edges: [], box: null },
+    metadata: {
+      unit,
+      author,
+      source: normalizedSource,
+      ...(bounds ? { bounds } : {}),
+      canvasBounds,
+    },
+    counters: {
+      edges: edges.length,
+      history: 1,
+    },
+    history: [
+      {
+        id: "history-1",
+        label: `Patrón importado${labelSuffix}`,
+        timestamp,
+        metadata: {
+          source: normalizedSource,
+          lines: edges.length,
+        },
+      },
+    ],
   };
 }
 

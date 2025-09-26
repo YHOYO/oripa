@@ -3,17 +3,38 @@ function isReadableFile(file) {
   return FileCtor && file instanceof FileCtor && typeof file.text === "function";
 }
 
+function getFormatFromFileName(name) {
+  if (typeof name !== "string") {
+    return "opx";
+  }
+
+  const match = name.toLowerCase().match(/\.([a-z0-9]+)$/);
+  if (!match) {
+    return "opx";
+  }
+
+  const extension = match[1];
+  if (extension === "cp") {
+    return "cp";
+  }
+
+  return "opx";
+}
+
 export function createPersistenceControls({ documentStore }) {
   if (
     !documentStore ||
     typeof documentStore.importFromOpx !== "function" ||
-    typeof documentStore.exportToOpx !== "function"
+    typeof documentStore.exportToOpx !== "function" ||
+    typeof documentStore.importFromCp !== "function" ||
+    typeof documentStore.exportToCp !== "function"
   ) {
-    throw new Error("documentStore debe exponer importFromOpx y exportToOpx");
+    throw new Error(
+      "documentStore debe exponer importFromOpx, importFromCp, exportToOpx y exportToCp",
+    );
   }
 
   let statusElement = null;
-  let downloadLink = null;
 
   function setStatus(message, state = "idle") {
     if (!statusElement) return;
@@ -30,14 +51,19 @@ export function createPersistenceControls({ documentStore }) {
       return;
     }
 
+    const format = getFormatFromFileName(file.name);
     setStatus(`Importando ${file.name}…`, "loading");
 
     try {
       const contents = await file.text();
-      documentStore.importFromOpx(contents);
-      setStatus(`Se importó "${file.name}" correctamente.`, "success");
+      if (format === "cp") {
+        documentStore.importFromCp(contents);
+      } else {
+        documentStore.importFromOpx(contents);
+      }
+      setStatus(`Se importó "${file.name}" correctamente (.${format}).`, "success");
     } catch {
-      setStatus("Error al importar el archivo .opx.", "error");
+      setStatus(`Error al importar el archivo .${format}.`, "error");
     } finally {
       input.value = "";
     }
@@ -54,35 +80,33 @@ export function createPersistenceControls({ documentStore }) {
     }, 1000);
   }
 
-  function handleExportClick() {
+  function handleExportClick(format) {
     const BlobCtor = globalThis?.Blob;
     const URLCtor = globalThis?.URL;
 
     if (!BlobCtor || !URLCtor) {
-      setStatus("El navegador no soporta exportar archivos .opx.", "error");
+      setStatus(`El navegador no soporta exportar archivos .${format}.`, "error");
       return;
     }
 
     try {
-      const xmlContents = documentStore.exportToOpx();
-      const blob = new BlobCtor([xmlContents], { type: "application/xml" });
+      const contents = format === "cp" ? documentStore.exportToCp() : documentStore.exportToOpx();
+      const mimeType = format === "cp" ? "text/plain" : "application/xml";
+      const blob = new BlobCtor([contents], { type: mimeType });
       const url = URLCtor.createObjectURL(blob);
 
-      if (!downloadLink) {
-        downloadLink = document.createElement("a");
-        downloadLink.style.display = "none";
-        downloadLink.setAttribute("download", "pattern.opx");
-        statusElement?.parentElement?.appendChild(downloadLink);
-      }
-
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      downloadLink.href = url;
-      downloadLink.download = `oripa-pattern-${timestamp}.opx`;
-      downloadLink.click();
+      const anchor = document.createElement("a");
+      anchor.style.display = "none";
+      anchor.href = url;
+      anchor.download = `oripa-pattern-${timestamp}.${format}`;
+      statusElement?.parentElement?.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
       revokeUrlLater(url);
-      setStatus("Patrón exportado como .opx.", "success");
+      setStatus(`Patrón exportado como .${format}.`, "success");
     } catch {
-      setStatus("Error al exportar el patrón actual.", "error");
+      setStatus(`Error al exportar el patrón actual (.${format}).`, "error");
     }
   }
 
@@ -96,19 +120,30 @@ export function createPersistenceControls({ documentStore }) {
 
     const importLabel = document.createElement("label");
     importLabel.className = "persistence-import";
-    importLabel.textContent = "Importar .opx";
+    importLabel.textContent = "Importar .opx/.cp";
 
     const importInput = document.createElement("input");
     importInput.type = "file";
-    importInput.accept = ".opx,.xml,application/xml,text/xml";
+    importInput.accept = ".opx,.cp,.xml,application/xml,text/xml";
     importInput.addEventListener("change", handleImportChange);
     importLabel.appendChild(importInput);
 
-    const exportButton = document.createElement("button");
-    exportButton.type = "button";
-    exportButton.className = "persistence-export";
-    exportButton.textContent = "Exportar .opx";
-    exportButton.addEventListener("click", handleExportClick);
+    const actions = document.createElement("div");
+    actions.className = "persistence-actions";
+
+    const exportOpxButton = document.createElement("button");
+    exportOpxButton.type = "button";
+    exportOpxButton.className = "persistence-export";
+    exportOpxButton.textContent = "Exportar .opx";
+    exportOpxButton.addEventListener("click", () => handleExportClick("opx"));
+
+    const exportCpButton = document.createElement("button");
+    exportCpButton.type = "button";
+    exportCpButton.className = "persistence-export";
+    exportCpButton.textContent = "Exportar .cp";
+    exportCpButton.addEventListener("click", () => handleExportClick("cp"));
+
+    actions.append(exportOpxButton, exportCpButton);
 
     statusElement = document.createElement("p");
     statusElement.className = "persistence-status";
@@ -116,9 +151,9 @@ export function createPersistenceControls({ documentStore }) {
     statusElement.setAttribute("role", "status");
     statusElement.setAttribute("aria-live", "polite");
     statusElement.textContent =
-      "Selecciona un archivo .opx para importar o exporta el patrón actual.";
+      "Selecciona un archivo .opx/.cp para importar o exporta el patrón actual.";
 
-    wrapper.append(importLabel, exportButton, statusElement);
+    wrapper.append(importLabel, actions, statusElement);
 
     container.replaceChildren(wrapper);
   }

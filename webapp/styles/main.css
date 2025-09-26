@@ -168,6 +168,12 @@ body {
   color: inherit;
 }
 
+.persistence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .persistence-export {
   background: var(--accent);
   color: #000;

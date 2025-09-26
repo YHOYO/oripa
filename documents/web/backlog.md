@@ -51,6 +51,8 @@
 > **Actualización 2024-05-13**: Se incorporó un parser/serializador `.opx` junto con importación en el `documentStore`, cubierto por pruebas unitarias.
 
 > **Actualización 2024-05-14**: La UI del prototipo permite importar y exportar archivos `.opx` desde la barra lateral con mensajes de estado accesibles.
+>
+> **Actualización 2024-05-15**: Se añadió soporte `.cp` al store y a la barra lateral, incluyendo parser/serializador dedicado y botones de exportación/importación con historial.
 
 ## Persistencia
 | ID | Historia | P | E | Dep |

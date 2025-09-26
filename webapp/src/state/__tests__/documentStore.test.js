@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { createDocumentStore } from "../../state/documentStore.js";
 import { parseOpx } from "../../io/opx.js";
+import { parseCp } from "../../io/cp.js";
 
 test("addEdge appends a new edge and history entry", () => {
   const store = createDocumentStore();
@@ -365,4 +366,29 @@ test("exportToOpx serializes the current document", () => {
 
   assert.equal(parsed.lines.length, document.edges.length);
   assert(parsed.lines.every((line) => typeof line.type === "string"));
+});
+
+test("importFromCp loads CP text", () => {
+  const store = createDocumentStore();
+  const cpSource = `2 0 0 10 0\n3 10 0 10 10\n1 -5 2.5 5 2.5`;
+
+  store.importFromCp(cpSource);
+
+  const document = store.getDocument();
+  assert.equal(document.edges.length, 3);
+  assert.equal(document.edges[0].type, "mountain");
+  assert.equal(document.metadata.source, "cp");
+  assert.equal(document.history.length, 1);
+  assert.match(document.history[0].label, /\.cp/);
+});
+
+test("exportToCp omits auxiliary edges", () => {
+  const store = createDocumentStore();
+  store.bootstrapEmptyDocument();
+
+  const exported = store.exportToCp();
+  const { lines } = parseCp(exported);
+
+  assert(lines.length > 0);
+  assert(lines.every((line) => line.type !== "auxiliary"));
 });
