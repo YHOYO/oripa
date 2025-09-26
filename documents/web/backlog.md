@@ -54,6 +54,8 @@
 >
 > **Actualización 2024-05-15**: Se añadió soporte `.cp` al store y a la barra lateral, incluyendo parser/serializador dedicado y botones de exportación/importación con historial.
 
+> **Actualización 2024-05-16**: Revisión del plan multisesión: Fase 2 estimada en ~72 % tras completar herramientas principales y persistencia `.opx/.cp`; quedan pendientes portapapeles, múltiples documentos y exportes `.fold`/PNG.
+
 ## Persistencia
 | ID | Historia | P | E | Dep |
 | --- | --- | --- | --- | --- |
