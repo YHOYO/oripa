@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toolList: document.getElementById("tool-list"),
     historyList: document.getElementById("history-list"),
     selectionPanel: document.getElementById("selection-panel"),
+    diagnosticsPanel: document.getElementById("folding-diagnostics"),
     persistencePanel: document.getElementById("persistence-panel"),
     clipboardPanel: document.getElementById("clipboard-panel"),
     documentTabs: document.getElementById("document-tabs"),

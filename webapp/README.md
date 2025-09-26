@@ -93,6 +93,7 @@ El nuevo panel de **portapapeles** habilita atajos nativos (Ctrl/Cmd+C, X, V) y 
 
 - **Análisis local** &mdash; El `documentStore` expone `getLocalFlatFoldabilityReport`, que calcula sectores angulares por vértice y aplica los teoremas de Kawasaki y Maekawa para preparar el motor de plegado.
 - **Pruebas iniciales** &mdash; El módulo `folding/localFlatFoldability` cuenta con pruebas unitarias que validan los diagnósticos antes de añadir transformaciones y workers.
+- **Panel en tiempo real** &mdash; La barra lateral ahora muestra un panel de "Plegabilidad local" que resume cuántos vértices cumplen los teoremas y lista las desviaciones detectadas para guiar correcciones inmediatas.
 
 ## Next steps
 

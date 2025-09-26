@@ -14,12 +14,14 @@ import { createSelectionInspector } from "../ui/selectionInspector.js";
 import { createPersistenceControls } from "../ui/persistenceControls.js";
 import { createClipboardControls } from "../ui/clipboardControls.js";
 import { createDocumentTabs } from "../ui/documentTabs.js";
+import { createFoldingDiagnosticsPanel } from "../ui/foldingDiagnosticsPanel.js";
 
 export function createApplication({
   canvas,
   toolList,
   historyList,
   selectionPanel,
+  diagnosticsPanel,
   persistencePanel,
   clipboardPanel,
   documentTabs,
@@ -29,6 +31,7 @@ export function createApplication({
   const canvasPresenter = createCanvasPresenter({ canvas, documentStore });
   const toolController = createToolController({ canvas, documentStore });
   const selectionInspector = createSelectionInspector({ documentStore });
+  const foldingDiagnostics = createFoldingDiagnosticsPanel({ documentStore });
   const persistenceControls = createPersistenceControls({ documentStore, canvas });
   const clipboardControls = createClipboardControls({ documentStore });
   const documentTabsPresenter = createDocumentTabs({ documentStore });
@@ -64,6 +67,7 @@ export function createApplication({
     toolRegistry.mount(toolList);
     historyTimeline.mount(historyList);
     selectionInspector.mount(selectionPanel);
+    foldingDiagnostics.mount(diagnosticsPanel);
     persistenceControls.mount(persistencePanel);
     clipboardControls.mount(clipboardPanel);
     documentTabsPresenter.mount(documentTabs);
@@ -71,6 +75,7 @@ export function createApplication({
     documentStore.subscribe(canvasPresenter.render);
     documentStore.subscribe(historyTimeline.render);
     documentStore.subscribe(selectionInspector.render);
+    documentStore.subscribe(foldingDiagnostics.render);
     documentStore.subscribe(clipboardControls.render);
 
     documentStore.bootstrapEmptyDocument();

@@ -305,6 +305,67 @@ body {
   padding: 1rem;
 }
 
+.diagnostics-group {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.folding-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.folding-diagnostics__summary {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.folding-diagnostics__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.folding-diagnostics__empty {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.folding-diagnostics__issue {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 125, 0, 0.12);
+  border: 1px solid rgba(255, 125, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.folding-diagnostics__vertex {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.folding-diagnostics__detail {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .clipboard-group {
   background: rgba(0, 0, 0, 0.12);
   border-radius: 0.5rem;

@@ -86,6 +86,8 @@
 > **Actualización 2024-05-19**: El exportador `.fold` convierte el patrón activo a JSON FOLD con vértices deduplicados y metadatos y se añadió el botón correspondiente en la UI de persistencia.
 
 > **Actualización 2024-05-20**: Las exportaciones PNG/JPG cierran la persistencia visual de la fase 2 y se añadió el primer módulo de diagnósticos de plegabilidad local (inicio FLD-1).
+>
+> **Actualización 2024-05-21**: El panel de "Plegabilidad local" integra los diagnósticos de Kawasaki/Maekawa en la UI para visibilizar desviaciones del motor en tiempo real.
 
 ## Automatizaciones
 | ID | Historia | P | E | Dep |
