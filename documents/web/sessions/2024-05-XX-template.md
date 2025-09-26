@@ -1,0 +1,13 @@
+# Bitácora de sesión (reimplementación web)
+- **Fecha**: 2024-05-XX
+- **Participantes**: 
+- **Objetivos del día**:
+  - 
+- **Avances**:
+  - 
+- **Bloqueos/Riesgos**:
+  - 
+- **Próximos pasos**:
+  - 
+- **Artefactos actualizados**:
+  - 

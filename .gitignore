@@ -5,6 +5,8 @@
 /build
 /.gradle
 /logs
+node_modules/
+webapp/node_modules/
 
 # Package Files #
 *.jar

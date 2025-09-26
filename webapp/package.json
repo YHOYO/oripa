@@ -1,0 +1,23 @@
+{
+  "name": "oripa-webapp",
+  "version": "0.1.0",
+  "description": "HTML5/ESM prototype for the ORIPA web reimplementation roadmap (Phase 2).",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint \"src/**/*.js\"",
+    "test": "node --test \"src/**/*.test.js\"",
+    "format": "prettier --check \"{src,styles}/**/*.{js,css}\"",
+    "format:write": "prettier --write \"{src,styles}/**/*.{js,css}\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.36.0",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.6.2"
+  }
+}
